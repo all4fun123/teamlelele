@@ -8,6 +8,7 @@ import random
 import sys
 import io
 import logging
+import os
 from datetime import datetime
 from pytz import timezone
 
@@ -17,15 +18,18 @@ app = Flask(__name__)
 if sys.platform.startswith('win'):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-# Set up logging to file with UTF-8
+# Set up logging to file and console with UTF-8
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(message)s',
     handlers=[
+        logging.FileHandler('event_log.txt', encoding='utf-8'),
         logging.StreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger()
+
+# secreto
 
 # Class to store account state
 class AccountState:
@@ -40,7 +44,7 @@ async def run_event_flow(session, username, bearer_token, state):
     try:
         # ========== CONFIGURATION ==========
         maker_code = "BEAuSN19"
-        backend_key_sign = "de54c591d457ed1f1769dda0013c9d30f6fc9bbff0b36ea0a425233bd82a1a22"
+        backend_key_sign = os.getenv("BACKEND_KEY_SIGN", "de54c591d457ed1f1769dda0013c9d30f6fc9bbff0b36ea0a425233bd82a1a22")
         login_url = "https://apiwebevent.vtcgame.vn/besnau19home/Event"
         au_url = "https://au.vtc.vn"
 
@@ -161,7 +165,7 @@ async def run_event_flow(session, username, bearer_token, state):
                 if not share_token:
                     logger.warning(f"Tài khoản {account_nick}: Phản hồi token chia sẻ: {share_res}")
                     return False
-                logger.info(f"Tài khoản {account_nick}: Token chia sẻ: {share_token}")
+
 
             logger.info(f"Tài khoản {account_nick}: Đang gửi wish-share...")
             final_time = get_current_timestamp()
@@ -293,5 +297,6 @@ def status():
     ]
     return jsonify({"accounts": status_data})
 
-if __name__ == '__main__':
-    app.run(debug=True, port=10000)
+if __name__ == "__main__":
+    # Development server for testing only
+    app.run(debug=False, host='0.0.0.0', port=5000)
